@@ -10,11 +10,17 @@ body, html {
   position: relative;
 }
 
+// 命名成slide的过渡动画它的相关的样式名
+//因为样式切换这种效果在多个地方都会使用，所以全局定义成公共的样式 
+//transition组件最终给这个DOM添加或者删除这些样式名，内部通过transition和transform来实现动画
 .slide-enter-active, .slide-leave-active {
+  //过渡0.3s 向左拉动
   transition: all 0.3s
 }
 
 .slide-enter-from, .slide-leave-to {
+  //translate3d(100%, 0, 0)横向偏移自身的一个身位即横向偏移100%
+  //右偏移
   transform: translate3d(100%, 0, 0)
 }
 

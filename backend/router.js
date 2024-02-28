@@ -66,7 +66,9 @@ function post(url, params) {
 function handleSongList(list) {
   const songList = []
 
+  //根据原始的list做一个遍历
   list.forEach((item) => {
+    //遍历到每一项就可以做一个过滤
     const info = item.songInfo || item
     if (info.pay.pay_play !== 0 || !info.interval) {
       // 过滤付费歌曲和获取不到时长的歌曲
@@ -79,15 +81,18 @@ function handleSongList(list) {
       mid: info.mid,
       name: info.name,
       singer: mergeSinger(info.singer),
+      //这个是歌曲播放的一个url，在这里是拿不到的所以为空，相当于第三方接口做的一个保护，而且每个URL每天都在发生变化
       url: '', // 在另一个接口获取
       duration: info.interval,
       pic: info.album.mid ? `https://y.gtimg.cn/music/photo_new/T002R800x800M000${info.album.mid}.jpg?max_age=2592000` : fallbackPicUrl,
       album: info.album.name
     }
 
+    //把数据结构push到数组中
     songList.push(song)
   })
 
+  //再把数组返回出去
   return songList
 }
 
@@ -217,9 +222,12 @@ function registerRecommend(app) {
 // 注册歌手列表接口路由
 function registerSingerList(app) {
   app.get('/api/getSingerList', (req, res) => {
+    //拿到第三方服务的url
     const url = 'https://u.y.qq.com/cgi-bin/musics.fcg'
-    const HOT_NAME = '热'
+    const HOT_NAME = '热门歌手'
+    // const HOT_TITLE_NAME = '热门歌手'
 
+    //构造相关数据
     const data = JSON.stringify({
       comm: { ct: 24, cv: 0 },
       singerList: {
@@ -232,12 +240,15 @@ function registerSingerList(app) {
     const randomKey = getRandomVal('getUCGI')
     const sign = getSecuritySign(data)
 
+    //发送get请求到第三方服务
     get(url, {
       sign,
       '-': randomKey,
       data
     }).then((response) => {
+      //第三方请求接收到请求后返回响应
       const data = response.data
+      //获取成功时
       if (data.code === ERR_OK) {
         // 处理歌手列表数据
         const singerList = data.singerList.data.singerlist
@@ -245,6 +256,7 @@ function registerSingerList(app) {
         // 构造歌手 Map 数据结构
         const singerMap = {
           hot: {
+            // title: '热门歌手',
             title: HOT_NAME,
             list: map(singerList.slice(0, 10))
           }
@@ -316,13 +328,19 @@ function registerSingerList(app) {
 
 // 注册歌手详情接口路由
 function registerSingerDetail(app) {
+  //当前端发送'/api/getSingerDetail'这个请求之后就会进入到下面的逻辑
   app.get('/api/getSingerDetail', (req, res) => {
+    //先构造请求第三方服务接口的URL及请求参数data
     const url = 'https://u.y.qq.com/cgi-bin/musics.fcg'
 
     const data = JSON.stringify({
       comm: { ct: 24, cv: 0 },
       singerSongList: {
         method: 'GetSingerSongList',
+        //因为是请求歌手的详情所以携带一个歌手的mid即singerMid: req.query.mid,这是表示这是哪个歌手的唯一标识
+        //num字段表示获取歌手的前多少条歌曲
+        //当它从100改成10，就请求不到数据，我们需要给用户一个反馈，这就属于边界情况的处理
+        //发送一个异步请求去请求某个数据，数据有的时候正常渲染，没有的时候也要给用户一个反馈
         param: { order: 1, singerMid: req.query.mid, begin: 0, num: 100},
         module: 'musichall.song_list_server'
       }
@@ -331,6 +349,7 @@ function registerSingerDetail(app) {
     const randomKey = getRandomVal('getSingerSong')
     const sign = getSecuritySign(data)
 
+    //发送get请求
     get(url, {
       sign,
       '-': randomKey,
@@ -338,12 +357,14 @@ function registerSingerDetail(app) {
     }).then((response) => {
       const data = response.data
       if (data.code === ERR_OK) {
+        //相应成功后拿到歌手的歌曲列表
         const list = data.singerSongList.data.songList
         // 歌单详情、榜单详情接口都有类似处理逻辑，固封装成函数
         const songList = handleSongList(list)
 
         res.json({
           code: ERR_OK,
+          //拿到歌手的歌曲列表详情数据之后将数据返回给前端
           result: {
             songs: songList
           }
@@ -358,11 +379,16 @@ function registerSingerDetail(app) {
 // 注册歌曲 url 获取接口路由
 // 因为歌曲的 url 每天都在变化，所以需要单独的接口根据歌曲的 mid 获取
 function registerSongsUrl(app) {
+  //get路由
   app.get('/api/getSongsUrl', (req, res) => {
+    //query中传入mid,mid是歌曲中的mid数组
     const mid = req.query.mid
 
+    //构造midGroup实际上是做一个数据的切割
     let midGroup = []
-    // 第三方接口只支持最多处理 100 条数据，所以如果超过 100 条数据，我们要把数据按每组 100 条切割，发送多个请求
+    // 做数据切割的原因：第三方接口只支持最多处理 100 条数据，
+    //所以如果超过 100 条数据，我们要把数据按每组 100 条切割，发送多个请求
+    //这个切割是为了让前端方便
     if (mid.length > 100) {
       const groupLen = Math.ceil(mid.length / 100)
       for (let i = 0; i < groupLen; i++) {
@@ -372,17 +398,22 @@ function registerSongsUrl(app) {
       midGroup = [mid]
     }
 
-    // 以歌曲的 mid 为 key，存储歌曲 URL
+    // 构造urlMap以歌曲的 mid 为 key，存储歌曲 URL
+    //这个是给前端用的，知道每个mid对应什么歌曲
+    //就可以通过遍历歌曲列表拿到每个歌曲的mid，
+    //就知道每个mid映射url是什么,就可以补充url信息了
     const urlMap = {}
 
-    // 处理返回的 mid
+    // 处理返回的 mid（具体请求的逻辑）
     function process(mid) {
+      //构造第三方服务接口所需要的数据data
       const data = {
         req_0: {
           module: 'vkey.GetVkeyServer',
           method: 'CgiGetVkey',
           param: {
             guid: getUid(),
+            //mid数组songmid
             songmid: mid,
             songtype: new Array(mid.length).fill(0),
             uin: '0',
@@ -399,18 +430,24 @@ function registerSongsUrl(app) {
         }
       }
 
+      //将签名拼到url上，因为要发送post请求
+      //虽然代理的是get请求，但是第三方服务只认post请求
       const sign = getSecuritySign(JSON.stringify(data))
       const url = `https://u.y.qq.com/cgi-bin/musics.fcg?_=${getRandomVal()}&sign=${sign}`
 
-      // 发送 post 请求
+      // 发送 post 请求，这个post请求是基于axios.post发的
+      //并且'Content-Type'是form-data
       return post(url, data).then((response) => {
         const data = response.data
         if (data.code === ERR_OK) {
+          //请求结束拿到结果，midurlinfo是一个数组
+          //可以理解为歌曲的详细信息，可以从中拿到purl
           const midInfo = data.req_0.data.midurlinfo
           const sip = data.req_0.data.sip
           const domain = sip[sip.length - 1]
           midInfo.forEach((info) => {
-            // 获取歌曲的真实播放 URL
+            // purl拼接上domain获取歌曲的真实播放 URL
+            //将真实的url放到urlMap中，songmid就是key
             urlMap[info.songmid] = domain + info.purl
           })
         }
@@ -424,7 +461,7 @@ function registerSongsUrl(app) {
 
     // 并行发送多个请求
     return Promise.all(requests).then(() => {
-      // 所有请求响应完毕，urlMap 也就构造完毕了
+      // 所有请求响应完毕，urlMap 也就构造完毕了，就把响应给前端
       res.json({
         code: ERR_OK,
         result: {

@@ -51,9 +51,9 @@
           :key="item"
           class="item"
           :data-index="index"
-          :class="{'current':currentIndex===index}"
+          :class="{'current':currentIndex === index}"
         >
-          {{ item }}
+          {{ (item && item.length > 1) ? item[0] : item }}
         </li>
       </ul>
     </div>
@@ -76,15 +76,20 @@ export default {
       }
     }
   },
+  //vue3里面要在这里写好有哪些自定义事件
   emits: ['select'],
   setup(props,{emit}) {
+
     const {groupRef,onScroll,fixedTitle,fixedStyle,currentIndex} = useFixed(props)
-    const {shortcutList,onShortcutTouchStart,scrollRef,onShortcutTouchMove} = useShortcut(props,groupRef)
+    const {shortcutList,scrollRef,onShortcutTouchStart,onShortcutTouchMove} = useShortcut(props,groupRef)
 
     function onItemClick(item) {
-        emit('select', item)
-      }
+      //此参数item就是一条singer数据
+      //通过emit一个自定义事件select将item派发给外面
+      emit('select', item)
+    }
 
+    //称之为返回到模板中
     return {
       onItemClick,
       //fixed

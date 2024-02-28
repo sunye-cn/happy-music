@@ -40,17 +40,24 @@ export default {
   async created() {
     const result = await getSingerList()
     this.singers = result.singers
-    // console.log(result)
   },
   methods: {
     selectSinger(singer) {
+      //将singer赋值给定义好的响应式数据
+      //再将此响应式数据selectedSinger传递给上面的路由组件
       this.selectedSinger = singer
-      this.cacheSinger(singer)
-      // console.log(singer)
+      //在这里执行cacheSinger，先缓存再转跳二级路由
+      this.cacheSinger(singer)      
+      //路由跳转
+      //渲染singer-detail push路由的时候利用storage做一个存储
       this.$router.push({
+        //用路径跳转
         path: `/singer/${singer.mid}`
       })
     },
+    //存储需要一个key，把它存为一个常量，放在constant.js中
+    // constant.js中存一些共享的常量
+    //在这里缓存singer
     cacheSinger(singer) {
       storage.session.set(SINGER_KEY, singer)
     }

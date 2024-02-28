@@ -14,6 +14,7 @@ import {ref} from 'vue'
         type:Boolean,
         default:true
       },
+      // 根据betterScoll官网来看要配置一个probeType
       probeType: {
         type: Number,
         default: 0

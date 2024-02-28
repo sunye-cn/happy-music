@@ -197,20 +197,29 @@ import { PLAY_MODE } from '@/assets/js/constant'
       Scroll
     }, 
     
+    //在启动函数setup中
+    // 首先获取fullScreen、currentSong，然后把数据传递给上面的模板让模板可以正确的渲染
+    //vuex提供一个API就是专门为compositionAPI提供的，就是{ useStore }
     setup() {
       // data
       const audioRef = ref(null)
       const barRef = ref(null)
+      //不是说歌曲状态一更新就播放,而是要等到歌曲ready了之后播放,用ref搞成响应式初始值是false
       const songReady = ref(false)
+      //当前播放时间 歌曲播放过程中变化
       const currentTime = ref(0)
       // 设置默认标志位
       let progressChanging = false
 
       // vuex
+      //这个store可以理解为index.js中createStore返回的store实例，里面就有state、getters等这些属性
       const store = useStore()
+      //因为希望它是一个响应式的，所以用computed，上面会用computed响应式API
       const fullScreen = computed(() => store.state.fullScreen)
       const currentSong = computed(() => store.getters.currentSong)
+      // 要求动态绑定的class playIcon首先要获取它的playing状态
       const playing = computed(() => store.state.playing)
+      //获取当前索引
       const currentIndex = computed(() => store.state.currentIndex)
       const playMode = computed(() => store.state.playMode)
 
@@ -226,39 +235,55 @@ import { PLAY_MODE } from '@/assets/js/constant'
       const { cdWrapperRef, enter, afterEnter, leave, afterLeave } = useAnimation()
       const { savePlay } = usePlayHistory()
 
-      // computed     
+      // computed  
+      //当前播放列表   
       const playlist = computed(() => store.state.playlist)
 
+      //根据playing状态就可以计算出playIcon
       const playIcon = computed(() => {
+        //根据不同的播放状态求得它的playIcon
         return playing.value ? 'icon-pause' : 'icon-play'
       })
 
+      //歌曲的播放进度
       const progress = computed(() => {
+        //已播放时间/总时间=播放进度
         return currentTime.value / currentSong.value.duration
       })
 
+      //中途点击无效时要让他们在UI中看到,即添加一个diasble的样式
       const disableCls = computed(() => {
         return songReady.value ? '' : 'disable'
       })
 
-      // watch
+      // watch currentSong的变化，通过currentSong拿到歌曲的url，再把url赋值给audio,放到src里面就行
       watch(currentSong,(newSong) => {
+        //做个保护
         if(!newSong.id || !newSong.url) {
           return
         }
+
+        //歌曲切换的时候currentTime也要置为0
         currentTime.value = 0
+        //切歌的时候即歌曲发生变化的时候就将songReady置为false
         songReady.value = false
+        // 定义一个ref API audioRef来拿到audio对应的DOM对象
         const audioEl = audioRef.value
         audioEl.src = newSong.url
         audioEl.play()
         store.commit('setPlayingState', true)
       })
 
+      //watch playing数据的变化拿到newPlaying
+      // 数据的变化和DOM的映射关系通过watchAPI,通过命令式的语法watch了一个数据变化,然后获取了DOM
       watch(playing, (newPlaying) => {
+        //如果此时songReady是false就不播放
         if (!songReady.value) {
           return
         }
+        //根据newPlaying就可以操纵audio的DOM
         const audioEl = audioRef.value
+        // newPlaying播放状态是调用play方法，暂停的话就调用pause()
         if (newPlaying) {
           audioEl.play()
           playLyric()
@@ -276,41 +301,57 @@ import { PLAY_MODE } from '@/assets/js/constant'
       })
 
       // methods
+      //点击back按钮就收缩，就是让fullScreen变成false
       function goBack() {
+        //通过commit这个API提交一个mutation？
         store.commit('setFullScreen', false)
       }
 
+      //给中间的按钮绑定的点击事件，用来来回翻转播放状态，就是提交一个数据来修改全局state中的playing状态
       function togglePlay() {
+        //这个也要加一个歌曲是否ready的判断
         if (!songReady.value) {
           return
         }
+        //通过commit这个API提交，'setPlayingState'的值就是playing.value取反，因为要来回切换，播放的就变成暂停
+        //此时由于没有和audio联系起来，所以只会改变图形并不会暂停和播放歌曲，需要watch以下
         store.commit('setPlayingState', !playing.value)
       }
       
+      //当audioRef暂停时,不修改数据数据就会乱掉,监听一个原生DOM提供的pause事件,该事件对应一个pause方法,只需要在这个方法中修改数据就可以了
+      //也就是通过commit这个API提交，将'setPlayingState'的值改为false
       function pause() {
         store.commit('setPlayingState', false)
 
       }
+
+      //切换到上一首歌,就是让currentIndex-1
       function prev() {
+        //拿到playlist之后先获取playlist的value
         const list = playlist.value
+        //边界情况考虑,列表里面就没有歌曲以及
         if (!songReady.value || !list.length) {
           return
         }
 
+        //边界情况考虑,如果列表只有一首歌就让它循环播放
         if (list.length === 1) {
           loop()
         } else {
           let index = currentIndex.value - 1
+          //边界情况,当前这个歌曲是第一首歌,就让它播放最后一首歌,index就是当前播放列表的长度-1
           if (index === -1) {
             index = list.length - 1
           }
           store.commit('setCurrentIndex', index)
+          //如果是暂停的状态就让他播放
           // if(!playing.value) {
           //   store.commit('setPlayingState',true)
           // }
         }
       }
 
+      //切换到下一首歌,就是让currentIndex+1
       function next() {
         const list = playlist.value
         if (!songReady.value || !list.length) {
@@ -321,24 +362,27 @@ import { PLAY_MODE } from '@/assets/js/constant'
           loop()
         } else {
           let index = currentIndex.value + 1
+          //如果前进到末尾了,就让它播放第一首歌
           if (index === list.length) {
             index = 0
           }
           store.commit('setCurrentIndex', index)
-          // if(!playing.value) {
-          //   store.commit('setPlayingState',true)
-          // }
         }
       }
 
+      //循环播放当前歌曲
       function loop() {
+        //获取到audio的DOM audioEl
         const audioEl = audioRef.value
+        //通过DOMAPI设置当前播放歌曲时间为0,就是让他从头播放
         audioEl.currentTime = 0
         audioEl.play()
         store.commit('setPlayingState', true)
       }
 
+      //监听canplay事件
       function ready() {
+        //如果已经ready过了就不执行后面的逻辑了
         if (songReady.value) {
           return
         }
@@ -347,10 +391,12 @@ import { PLAY_MODE } from '@/assets/js/constant'
         savePlay(currentSong.value)
       }
 
+      //如果一首歌出现问题就不会触发canplay事件,songReady就永远为false就无法切换歌曲
       function error() {
         songReady.value = true
       }
 
+      //修改currentTime.value
       function updateTime(e) {
         if (!progressChanging) {
           currentTime.value = e.target.currentTime

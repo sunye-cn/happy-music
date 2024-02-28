@@ -37,13 +37,15 @@ export default {
     },
     rank: Boolean
   },
+  //定义emit自定义事件
   emits: ['select'],
   methods: {
     getDesc(song) {
-      // console.log(999)
+      // 描述包括：歌手名和专辑名称
       return `${song.singer}.${song.album}`
     },
     selectItem(song, index) {
+      // 派发一个emit事件
       this.$emit('select', { song, index })
     },
     getRankCls(index) {
