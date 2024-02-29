@@ -104,7 +104,7 @@
       },
       // 支持点击进度条跳转
       onClick(e) {
-        // 获得进度条rect里的left值？？
+        // 获得进度条rect里的left值
         const rect = this.$el.getBoundingClientRect()
         // 到进度条开始位置的偏移量
         const offsetWidth = e.pageX - rect.left

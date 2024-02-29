@@ -398,19 +398,26 @@ import { PLAY_MODE } from '@/assets/js/constant'
 
       //修改currentTime.value
       function updateTime(e) {
+        //做一个控制
+        //就是在progressChanging过程中做一个标志位progressChanging默认值false，在onProgressChanging中置为true，在onProgressChanged是置为false
+        //在updateTime中做一个判断
+        //可以看作在progressChanging过程中进度条发生改变修改currentTime优先级要高，自身歌曲发生改变引起的currentTime改变优先级变低
         if (!progressChanging) {
           currentTime.value = e.target.currentTime
         }
       }
 
+      //监听事件onProgressChanging就是修改 currentTime.value
       function onProgressChanging(progress) {
         progressChanging = true
+        //左侧当前时间实时改变
         currentTime.value = currentSong.value.duration * progress
         // 拖动进度条时歌词也要跟着动
         playLyric()
         stopLyric()
       }
 
+      //真实改变audioRef.value.currentTime
       function onProgressChanged(progress) {
         progressChanging = false
         audioRef.value.currentTime = currentTime.value = currentSong.value.duration * progress
@@ -421,6 +428,7 @@ import { PLAY_MODE } from '@/assets/js/constant'
         playLyric()
       }
 
+      //给ended事件的end回调函数
       function end() {
         currentTime.value = 0
         if (playMode.value === PLAY_MODE.loop) {
@@ -447,6 +455,7 @@ import { PLAY_MODE } from '@/assets/js/constant'
         next,
         ready,
         error,
+        //原生DOM事件@timeupdate
         updateTime,
         formatTime,
         onProgressChanging,

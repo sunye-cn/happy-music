@@ -473,13 +473,19 @@ function registerSongsUrl(app) {
 }
 
 // 注册歌词接口
-function registerLyric(app) {
+//歌词数据为什么不在请求歌曲列表时一并返回呢?因为对于歌曲而言歌词部分的数据实在是太庞大了，
+// 如果请求歌曲列表时所有歌词都返回过来，那么数据量就太大了那也是不必要的，
+// 因为并不是说歌曲列表里的所有的歌都会被访问到，如果把歌曲歌词的部分单独拆分出来，也就是当你去访问某一首歌时再去异步请求它的歌词，这样数据量就会大大减少
+function registerLyric(app) { 
   app.get('/api/getLyric', (req, res) => {
+    //get请求，当前端访问到'/api/getLyric'时就会进入下面的逻辑
     const url = 'https://c.y.qq.com/lyric/fcgi-bin/fcg_query_lyric_new.fcg'
 
+    //向第三方服务发送一个get请求
     get(url, {
       '-': 'MusicJsonCallback_lrc',
       pcachetime: +new Date(),
+      //请求的参数中传入歌曲的mid
       songmid: req.query.mid,
       g_tk_new_20200303: token
     }).then((response) => {
@@ -488,6 +494,7 @@ function registerLyric(app) {
         res.json({
           code: ERR_OK,
           result: {
+            //获取的歌词数据通过Base64做一次解码，因为原始数据是编码后的。这里的Base64是JS的Base64的库
             lyric: Base64.decode(data.lyric)
           }
         })

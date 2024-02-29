@@ -32,8 +32,12 @@ const mutations = {
   },
   // 添加歌词
   addSongLyric(state, { song, lyric }) {
+    //给state.sequenceList做一个map拿到它们每一首歌item
+    //这种方式相当于修改sequenceList，sequenceList对应的这首歌song对应的lyric就添加进去了。这里是保留对象引用，一旦修改playlist也会发生变化。
+    //通过这种方式就可以为一首歌添加它的歌词，给这个song添加lyric属性
     state.sequenceList.map((item) => {
       if (item.mid === song.mid) {
+        //如果是同一首歌
         item.lyric = lyric
       }
       return item

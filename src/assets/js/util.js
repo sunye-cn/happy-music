@@ -29,8 +29,10 @@ export function formatTime(interval) {
   //向下取整
   interval = interval | 0
   //拿到分钟部分
+  // (interval / 60 | 0) + ''是将数字变成一个字符串。
+  // .padStart(2, '0')往前面填充0，保持它有两位
   const minute = ((interval / 60 | 0) + '').padStart(2, '0')
-  //拿到秒的部分
+  //拿到秒的部分 (interval % 60 + '')取余后变成字符串
   const second = (interval % 60 + '').padStart(2, '0')
   return `${minute}:${second}`
 }

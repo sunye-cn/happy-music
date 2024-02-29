@@ -30,22 +30,38 @@ export function processSongs(songs) {
   })
 }
 
+//song这个对象可能会有不同对象的mid是相等的这种情况存在
+//作进一步优化
+//lyricMap的key就是id，值就是lyric
 const lyricMap = {}
 
+//获取歌词
+//什么时候调用getLyric这个服务呢？当前歌曲发生变化时，比如切歌时即从一首歌变到另一首歌，currentSong发生变化时，就会调用这个服务发送get请求拿到对应的歌词
 export function getLyric(song) {
+  //既然可以保留lyric，就可以在发送请求时做一个判断
   if (song.lyric) {
     return Promise.resolve(song.lyric)
   }
+  //先获取歌曲的mid
   const mid = song.mid
+  //通过lyricMap对应的mid拿到lyric
   const lyric = lyricMap[mid]
   if (lyric) {
+    //如果能拿到lyric也直接return
     return Promise.resolve(lyric)
   }
 
+  //如果上面都不满足说明之前就没有访问过这首歌的歌词就可以发送get请求，同时把歌词保留在lyricMap里面，并且把lyric保留在song这个对象中
+  //又因为song中间不能直接添加这个属性要通过提交mutation，就是在use-lyric.js中。这时vuex的一个限制。
+  //拿到lyric之后可以利用一个第三方的库即lyric-parser来对这个歌词做一个解析。
+  //因为这个歌词是一个字符串，这个歌词字符串中会映射每一句歌词对应的播放时间是怎么样的
   return get('/api/getLyric', {
+    //传入mid作为queri的参数
     mid
   }).then((result) => {
+    //判断结果是否为空
     const lyric = result ? result.lyric : '[00:00:00]该歌曲暂时无法获取歌词'
+    //获取到歌词之后可以对lyricMap做个保留
     lyricMap[mid] = lyric
     return lyric
   })
