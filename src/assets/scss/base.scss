@@ -29,6 +29,7 @@ body, html {
 }
 
 .list-enter-from, .list-leave-to {
+  //把列表元素的高度变成0
   height: 0 !important;
 }
 

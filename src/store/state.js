@@ -19,11 +19,13 @@ const state = {
   fullScreen: false,
   
   // 全局收藏列表，最终都要修改这个列表，给歌曲添加到收藏就是将歌曲添加到favoriteList，取消已收藏歌曲就是将歌曲从favoriteList中移除
+  //favoriteList初始值就是一个空数组,初始化逻辑放到main.js中
   favoriteList: [],
-  // favoriteList: load(FAVORITE_KEY),
   searchHistory: load(SEARCH_KEY),
-  // playHistory: load(PLAY_KEY),
-  playHistory: []
+  playHistory: [],
+
+  // favoriteList: load(FAVORITE_KEY),
+   // playHistory: load(PLAY_KEY),
 }
 
 export default state

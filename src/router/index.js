@@ -53,9 +53,11 @@ const routes = [
       }
     ]
   },
+  //因为是一级路由，需要配置一下
   {
     path: '/user',
     components: {
+      //不是default而是用名字user
       user:UserCenter
     }
   }

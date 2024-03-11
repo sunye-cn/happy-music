@@ -5,10 +5,13 @@ import Lyric from 'lyric-parser'
 
 //useLyric内部拿到当前歌曲currentSong并观测它的变化
 export default function useLyric({ songReady, currentTime }) {
-  //Lyric的一个对象实例
+  //lyric-parser的一个对象实例
   const currentLyric = ref(null)
+  //当前显示的行号
   const currentLineNum = ref(0)
+  //捕捉到的纯音乐无歌词音乐会显示的文案，如果有就显示出来。这里进行初始化
   const pureMusicLyric = ref('')
+  //playing-lyric中playingLyric表示当前播放的歌词是什么
   const playingLyric = ref('')
   const lyricScrollRef = ref(null)
   const lyricListRef = ref(null)
@@ -47,8 +50,13 @@ export default function useLyric({ songReady, currentTime }) {
 
     //初始化Lyric对象
     currentLyric.value = new Lyric(lyric, handleLyric)
+    //获取逻辑实例化lyric，通过lyric-parser做一个解析时，做一个判断，如果解析出lines有长度的话就认为你就是有lyric，否则就是无歌词
     const hasLyric = currentLyric.value.lines.length
     if (hasLyric) {
+      //如果songReady为true，即他已经开始播放，这个时候同步歌词才有意义
+      //lyric获取之后发现歌曲ready这个时候可以播放
+      //如果歌词已经获之后currentSong ready还没有触发playLyric就不能执行了，
+      //所以若要保证playLyric一定执行的话可以在player.vue中监听canplay事件触发ready的时候在ready里面再执行playLyric
       if (songReady.value) {
         playLyric()
       }
@@ -61,10 +69,12 @@ export default function useLyric({ songReady, currentTime }) {
   function playLyric() {
     const currentLyricVal = currentLyric.value
     if (currentLyricVal) {
+      //seek函数seek到当前的播放时间
       currentLyricVal.seek(currentTime.value * 1000)
     }
   }
 
+  //playing从播放到暂停的状态歌词也要做一个相应的暂停
   function stopLyric() {
     const currentLyricVal = currentLyric.value
     if (currentLyricVal) {
@@ -72,18 +82,28 @@ export default function useLyric({ songReady, currentTime }) {
     }
   }
 
-  //处理函数，歌词在切换过程中执行handleLyric，未来就可以在handleLyric内部执行一些逻辑
+  //回调函数，歌词在切换过程中执行handleLyric，未来就可以在handleLyric内部执行一些逻辑
+  //handleLyric这个触发条件，播放歌词的过程中，歌词播放完会跳到下一行，一行一行的跳每次都会执行这个handleLyric
   function handleLyric({ lineNum, txt }) {
-    // 当前行号
+    // 当前行号，handleLyric参数中可以拿到行号
     currentLineNum.value = lineNum
     playingLyric.value = txt
+    //组件实例 后缀Comp
     const scrollComp = lyricScrollRef.value
+    //DOM实例 后缀El
     const listEl = lyricListRef.value
+    //因为listEl指向play.vue中的"lyric-wrapper"这个层，根据currentLyric是否有v-if控制的value可能为空
     if (!listEl) {
+      //没有的话就return，没有的话列表就没有必要去滚动了
       return
     }
-    // 滚动时让高亮始终保持中间位置
+  
+    //希望前五行时滚动始终在顶部，第六行时希望是他的位置减去第五行的位置
+    // 这样滚动时保证当前高亮始终保持中间位置
     if (lineNum > 5) {
+      //为什么要获取list，通过listchildren获取到就可以获取到每一个lineEl，从而获取到每一行对应的DOM
+      //lineNum - 5是为了让滚动的位置偏中间一点
+      //lineEl就是要滚动到这一行的这个位置
       const lineEl = listEl.children[lineNum - 5]
       scrollComp.scroll.scrollToElement(lineEl, 1000)
     } else {

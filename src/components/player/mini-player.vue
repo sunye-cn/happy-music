@@ -63,7 +63,7 @@
 </template>
 
 <script>
-import { useStore } from 'vuex'
+  import { useStore } from 'vuex'
   import { computed, ref } from 'vue'
   import useCd from './use-cd'
   import useMiniSlider from './use-mini-slider'
@@ -84,10 +84,12 @@ import { useStore } from 'vuex'
       },
       togglePlay: Function
     },
+    //compersationAPI
     setup() {
       const playlistRef = ref(null)
 
       const store = useStore()
+      //fullScreen为false时显示mini-player
       const fullScreen = computed(() => store.state.fullScreen)
       const currentSong = computed(() => store.getters.currentSong)
       const playing = computed(() => store.state.playing)
@@ -210,6 +212,7 @@ import { useStore } from 'vuex'
       transition: all 0.6s cubic-bezier(0.45, 0, 0.55, 1);
     }
     &.mini-enter-from, &.mini-leave-to {
+      //缓动效果：出现时透明度是0，会渐变成1.transform有一个y轴100%的位移，就是说有一个从下往上冒的交互效果
       opacity: 0;
       transform: translate3d(0, 100%, 0)
     }

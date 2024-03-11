@@ -12,7 +12,7 @@
     <div class="switches-wrapper">
       <switches
         v-model="currentIndex"
-        :items="['我喜欢的', '最近播放']"
+        :items="['喜欢', '最近',]"
       />
     </div>
     <div

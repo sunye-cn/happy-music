@@ -67,6 +67,7 @@ export function clear(key) {
   return []
 }
 
+//存储整个数组
 export function saveAll(items, key) {
   storage.set(key, items)
 }

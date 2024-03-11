@@ -84,6 +84,7 @@
   import { ref, computed, watch, nextTick } from 'vue'
   import { getHotKeys } from '@/service/search'
   import { useStore } from 'vuex'
+  //做路由跳转，如何在comporcetionAPI中使用router，就用useRouter这个钩子函数
   import { useRouter } from 'vue-router'
   import storage from 'good-storage'
   import { SINGER_KEY } from '@/assets/js/constant'
@@ -101,6 +102,7 @@
     setup() {
       const query = ref('')
       const hotKeys = ref([])
+      //响应式对象
       const selectedSinger = ref(null)
       const scrollRef = ref(null)
       const confirmRef = ref(null)
@@ -127,18 +129,21 @@
         scrollRef.value.scroll.refresh()
       }
 
-      // 外部修改query
+      // 外部修改query，就是往搜索框中添加query
       function addQuery(s) {
         query.value = s.trim()
       }
 
+      //定义selectSong
       function selectSong(song) {
         saveSearch(query.value)
         store.dispatch('addSong', song)
       }
 
+      //除此之外还要做一个缓存，在歌手详情页刷新也希望在歌手详情页展示
       function selectSinger(singer) {
         saveSearch(query.value)
+        //赋值
         selectedSinger.value = singer
         cacheSinger(singer)
 
@@ -147,6 +152,7 @@
         })
       }
 
+      //缓存逻辑
       function cacheSinger(singer) {
         storage.session.set(SINGER_KEY, singer)
       }

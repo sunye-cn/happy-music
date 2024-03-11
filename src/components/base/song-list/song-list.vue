@@ -49,12 +49,14 @@ export default {
       this.$emit('select', { song, index })
     },
     getRankCls(index) {
+      //小于等于2，不需要返回任何文案
       if (index <= 2) {
         return `icon icon${index}`
       } else {
         return 'text'
       }
     },
+    //就是索引加一
     getRankText(index) {
       if (index > 2) {
         return index + 1

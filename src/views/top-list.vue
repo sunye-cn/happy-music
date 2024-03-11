@@ -63,6 +63,7 @@
         selectedTop: null
       }
     },
+    //获取榜单的数据，在钩子函数中获取
     async created() {
       const result = await getTopList()
       this.topList = result.topList
@@ -72,10 +73,12 @@
       selectItem(top) {
         this.selectedTop = top
         this.cacheTop(top)
+        //跳转到二级路由
         this.$router.push({
           path: `/top-list/${top.id}`
         })
       },
+      //刷新用的缓存
       cacheTop(top) {
         storage.session.set(TOP_KEY, top)
       }

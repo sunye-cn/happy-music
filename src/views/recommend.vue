@@ -18,7 +18,7 @@
             v-show="!loading"
             class="list-title"
           >
-            热门歌单推荐
+            歌单宝藏库
           </h1>
           <ul>
             <li
@@ -95,12 +95,12 @@ export default {
     selectItem(album) {
       this.selectedAlbum = album
       this.cacheAlbum(album)
-      // 路由跳转
+      // 利用路由push进行跳转
       this.$router.push({
         path: `/recommend/${album.id}`
       })
     },
-    // 可以在这个页面刷新
+    // 可以在这个页面刷新，就是一个缓存机制的逻辑
     cacheAlbum(album) {
       storage.session.set(ALBUM_KEY, album)
     }

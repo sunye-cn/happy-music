@@ -9,6 +9,8 @@ export default function useMiniSlider() {
   const sliderWrapperRef = ref(null)
   const slider = ref(null)
 
+  //并不是直接初始化slider，因为mini-player是通过v-show来实现的，要在mini-player显示的时候
+  //显示需要两个条件满足：1、fullScreen值为false；2、playlist值要大于0
   const store = useStore()
   const fullScreen = computed(() => store.state.fullScreen)
   const playlist = computed(() => store.state.playlist)
@@ -54,7 +56,10 @@ export default function useMiniSlider() {
       }
     })
 
+    //如果列表中删除了这首歌，再在mini-player左右滑动切歌时切到那首歌就不会显示图片也会发生报错
+    //多加一个逻辑，watch playList的变化，因为对歌曲做删除本质上就是playList发生变化，在playList发生变化的时候就可以执行sliderVal.refresh
     watch(playlist, async (newList) => {
+      //要判断sliderVal是否存在，因为在playList发生变化的时候sliderVal可能都没有初始化，并且sliderShow.value要有
       if (sliderVal && sliderShow.value && newList.length) {
         await nextTick()
         sliderVal.refresh()

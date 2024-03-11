@@ -56,12 +56,14 @@ import SongList from '@/components/base/song-list/song-list'
 import Scroll from '@/components/wrap-scroll'
 import { mapActions, mapState } from 'vuex'
 
+
 //修改层级是距离顶部的距离40像素
 const RESERVED_HEIGHT = 40
 
 export default {
   name:'MusicList',
   components: {
+    
     SongList,
     Scroll
   },
@@ -158,6 +160,7 @@ export default {
     },
     // 因为要动态添加scroll的top值，所以给它动态赋值一个style
     scrollStyle() {
+      //是否能滚动到底部，如果有mini-player就让它底在距离底部60px处
       const bottom = this.playlist.length ? '60px' : '0'
       return {
         // top值和imageHeight值一样
@@ -214,6 +217,7 @@ export default {
         index
       })
     },
+    
     random() {
       this.randomPlay(this.songs)
     },

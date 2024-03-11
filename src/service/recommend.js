@@ -6,8 +6,10 @@ export function getRecommend() {
   return get('/api/getRecommend');
 }
 
+//定义这个服务
 export function getAlbum(album) {
   return get('/api/getAlbum', {
+    //将album.id作为query参数传递过去
     id: album.id
   })
 }

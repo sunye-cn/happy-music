@@ -35,14 +35,17 @@
   export default {
     name: 'MConfirm',
     props: {
+      //中间的文案
       text: {
         type: String,
         default: ''
       },
+      //确定按钮的文案
       confirmBtnText: {
         type: String,
         default: '确定'
       },
+      //取消按钮的文案
       cancelBtnText: {
         type: String,
         default: '取消'
@@ -50,6 +53,7 @@
     },
     // 自定义事件
     emits: ['confirm', 'cancel'],
+    //data函数，return一个对象，visible响应式数据
     data() {
       return {
         visible: false
@@ -133,6 +137,7 @@
     }
   }
 
+  //opacity从0到1透明层的变化，scale缩放的变化
   @keyframes confirm-fadein {
     0% {
       opacity: 0;

@@ -24,6 +24,7 @@ export default function useScroll(wrapperRef, options, emit) {
     scroll.value.destroy()
   })
 
+  //keep-alive提供的两个钩子函数，做一些重置和清理的工作
   onActivated(() => {
     scroll.value.enable()
     scroll.value.refresh()

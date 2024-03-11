@@ -271,6 +271,7 @@ import { PLAY_MODE } from '@/assets/js/constant'
         const audioEl = audioRef.value
         audioEl.src = newSong.url
         audioEl.play()
+        //滑动或者点击切歌时，播放状态如果是暂停就改成播放
         store.commit('setPlayingState', true)
       })
 
@@ -344,10 +345,7 @@ import { PLAY_MODE } from '@/assets/js/constant'
             index = list.length - 1
           }
           store.commit('setCurrentIndex', index)
-          //如果是暂停的状态就让他播放
-          // if(!playing.value) {
-          //   store.commit('setPlayingState',true)
-          // }
+
         }
       }
 
@@ -413,6 +411,8 @@ import { PLAY_MODE } from '@/assets/js/constant'
         //左侧当前时间实时改变
         currentTime.value = currentSong.value.duration * progress
         // 拖动进度条时歌词也要跟着动
+        //除了修改这些数据之外，先play再stop，因为目标是让他停住，先让他偏移到当前拖动的位置再做一个播放，因为拖动过程中修改了currentTime
+        //先play就是先把歌词同步到currentTime的地方，但这时候又不想让他继续播放，就是手指不松的话希望他一直在这个位置
         playLyric()
         stopLyric()
       }
@@ -561,6 +561,7 @@ import { PLAY_MODE } from '@/assets/js/constant'
         white-space: nowrap;
         font-size: 0;
         .middle-l {
+        //因为playingLyric展示的是在cd这部分所以要把display: inline-block;给设回来
           display: inline-block;
           // display: none;
           vertical-align: top;

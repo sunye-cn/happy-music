@@ -2,6 +2,7 @@ import { save, remove, clear } from '@/assets/js/array-store'
 import { SEARCH_KEY } from '@/assets/js/constant'
 import { useStore } from 'vuex'
 
+//这个模块做的事情就是管理SearchHistory添加删除等等逻辑
 export default function useSearchHistory() {
   const maxLen = 200
 

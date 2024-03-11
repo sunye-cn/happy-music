@@ -14,14 +14,19 @@ import { processSongs } from '@/service/song'
 // 引入全局样式文件
 import '@/assets/scss/index.scss'
 
+//先读取本地的列表数据
 const favoriteSongs = load(FAVORITE_KEY)
 if (favoriteSongs.length > 0) {
+  //做一个批处理用processSongs，处理完之后就可以拿到新的songs，就是带有新的URL的歌曲列表
   processSongs(favoriteSongs).then((songs) => {
+    //这样就可以更新本地存储的store中的数据了
     store.commit('setFavoriteList', songs)
+    //将整个歌曲列表存储在本地的缓存中
     saveAll(songs, FAVORITE_KEY)
   })
 }
 
+//播放历史列表
 const historySongs = load(PLAY_KEY)
 if (historySongs.length > 0) {
   processSongs(historySongs).then((songs) => {

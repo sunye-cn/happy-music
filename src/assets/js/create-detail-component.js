@@ -3,7 +3,6 @@ import storage from 'good-storage'
 import { processSongs } from '@/service/song'
 
 export default function createDetailComponent(name, key, fetch) {
-  // console.log(arguments);
   return {
     name,
     components: { MusicList },

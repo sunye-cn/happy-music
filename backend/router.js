@@ -507,12 +507,15 @@ function registerLyric(app) {
 
 // 注册歌单专辑接口
 function registerAlbum(app) {
+  //get接口，当前端访问到'/api/getAlbum'时就会进入下面的逻辑
   app.get('/api/getAlbum', (req, res) => {
+    //首先定义第三方服务接口所需要的数据data
     const data = {
       req_0: {
         module: 'srf_diss_info.DissInfoServer',
         method: 'CgiGetDiss',
         param: {
+          // disstid也就是？是根据query过去的。就可以根据你传入的不同id获得不同的专辑详情了
           disstid: Number(req.query.id),
           onlysonglist: 1,
           song_begin: 0,
@@ -531,14 +534,18 @@ function registerAlbum(app) {
 
     const url = `https://u.y.qq.com/cgi-bin/musics.fcg?_=${getRandomVal()}&sign=${sign}`
 
+    //post发送一个post请求
     post(url, data).then((response) => {
       const data = response.data
       if (data.code === ERR_OK) {
+        //相应成功即数据成功拿到后就可以拿到数据中的songlist
         const list = data.req_0.data.songlist
+        //做一层处理之后
         const songList = handleSongList(list)
 
         res.json({
           code: ERR_OK,
+          //再把songlist返回给前端
           result: {
             songs: songList
           }
@@ -555,6 +562,7 @@ function registerTopList(app) {
   app.get('/api/getTopList', (req, res) => {
     const url = 'https://u.y.qq.com/cgi-bin/musics.fcg'
 
+    //给第三方接口发送一个请求
     const data = JSON.stringify({
       comm: { ct: 24 },
       toplist: { module: 'musicToplist.ToplistInfoServer', method: 'GetAll', param: {} }
@@ -569,10 +577,12 @@ function registerTopList(app) {
       data
     }).then((response) => {
       const data = response.data
+      //请求成功后就可以拿到数据
       if (data.code === ERR_OK) {
         const topList = []
         const group = data.toplist.data.group
 
+        //但是第三方接口的数据并不能直接拿来使用，需要做一个数据处理
         group.forEach((item) => {
           item.toplist.forEach((listItem) => {
             topList.push({
@@ -580,6 +590,7 @@ function registerTopList(app) {
               pic: listItem.frontPicUrl,
               name: listItem.title,
               period: listItem.period,
+              //songList就是排行榜的右侧渲染的前几个歌曲
               songList: listItem.song.map((songItem) => {
                 return {
                   id: songItem.songId,
@@ -593,6 +604,7 @@ function registerTopList(app) {
 
         res.json({
           code: ERR_OK,
+          //处理完的topList返回给前端
           result: {
             topList
           }
@@ -606,10 +618,13 @@ function registerTopList(app) {
 
 // 注册排行榜详情接口
 function registerTopDetail(app) {
+  //代理了一个get路由，当前端请求'/api/getTopDetail'接口之后就会执行内部逻辑
   app.get('/api/getTopDetail', (req, res) => {
     const url = 'https://u.y.qq.com/cgi-bin/musics.fcg'
+    //发送请求会携带一个query、id、period，后两个都是第三方服务接口所需要的
     const { id, period } = req.query
 
+    //想第三方服务发送请求，这构造他所需要的参数数据
     const data = JSON.stringify({
       detail: {
         module: 'musicToplist.ToplistInfoServer',
@@ -630,6 +645,7 @@ function registerTopDetail(app) {
     const randomKey = getRandomVal('getUCGI')
     const sign = getSecuritySign(data)
 
+    //发送一个get请求到第三方服务，拿到一个接口数据
     get(url, {
       sign,
       '-': randomKey,
@@ -638,10 +654,12 @@ function registerTopDetail(app) {
       const data = response.data
       if (data.code === ERR_OK) {
         const list = data.detail.data.songInfoList
+        //对于接口数据再做一个handleSongList的处理，处理成我们所需要的数据结构
         const songList = handleSongList(list)
 
         res.json({
           code: ERR_OK,
+          // 将处理好的数据返回给前端
           result: {
             songs: songList
           }
@@ -655,16 +673,20 @@ function registerTopDetail(app) {
 
 // 注册热门搜索接口
 function registerHotKeys(app) {
+  //代理了一个get路由，当前端请求'/api/getHotKeys'接口之后就会执行内部逻辑
   app.get('/api/getHotKeys', (req, res) => {
     const url = 'https://c.y.qq.com/splcloud/fcgi-bin/gethotkey.fcg'
 
+    //发送get请求
     get(url, {
       g_tk_new_20200303: token
     }).then((response) => {
       const data = response.data
+      //请求成功
       if (data.code === ERR_OK) {
         res.json({
           code: ERR_OK,
+          //将数据做一层处理，再将处理好的发送给前端
           result: {
             hotKeys: data.data.hotkey.map((key) => {
               return {
@@ -683,9 +705,12 @@ function registerHotKeys(app) {
 
 // 注册搜索查询接口
 function registerSearch(app) {
+  //代理了一个get路由，当前端请求'/api/search'接口之后就会执行内部逻辑
   app.get('/api/search', (req, res) => {
     const url = 'https://c.y.qq.com/soso/fcgi-bin/search_for_qq_cp'
 
+    //这个请求支持我们传入三个参数 query, page, showSinger ，这三个参数都会构造到data对象中做参数的一部分，因为data对象才是真正向第三方发送的请求参数
+    // query是我们查询的字符串；page页码因为是分页请求，未来会实现上拉加载的效果，page值会自增；showSinger这次查询的结果中要不要包含singer数据
     const { query, page, showSinger } = req.query
 
     const data = {
@@ -693,6 +718,7 @@ function registerSearch(app) {
       g_tk_new_20200303: token,
       w: query,
       p: page,
+      //每页的数量就是20，写死的
       perpage: 20,
       n: 20,
       zhidaqu: 1,
@@ -709,15 +735,19 @@ function registerSearch(app) {
       format: 'json'
     }
 
+    //通过get发送一个get请求到第三方服务，传入参数data，拿到一个接口数据
     get(url, data).then((response) => {
       const data = response.data
       if (data.code === ERR_OK) {
+        //请求成功后对数据做一个解析
         const songList = []
         const songData = data.data.song
         const list = songData.list
 
+        //首先解析歌曲列表部分，因为它的数据结构不满足我们所需要歌曲的数据结构的
         list.forEach((item) => {
           const info = item
+          //拿到每一项后先把付费歌曲过滤掉
           if (info.pay.payplay !== 0 || !info.interval) {
             // 过滤付费歌曲
             return
@@ -733,12 +763,16 @@ function registerSearch(app) {
             pic: info.albummid ? `https://y.gtimg.cn/music/photo_new/T002R800x800M000${info.albummid}.jpg?max_age=2592000` : fallbackPicUrl,
             album: info.albumname
           }
+          //构造出我们所需要的数据对象后把它push到songList中
           songList.push(song)
         })
 
+        //接下来解析singer
         let singer
+        //根据后端返回数据是否包含对应的逻辑
         const zhida = data.data.zhida
         if (zhida && zhida.type === 2) {
+          //满足之后就可以构造一个singer对象
           singer = {
             id: zhida.singerid,
             mid: zhida.singermid,
@@ -747,11 +781,16 @@ function registerSearch(app) {
           }
         }
 
+        //分页请求不是无限量的并不是可以永久去分页请求数据，数据是有限的体现在返回值totalnum上
+        //当前返回的数据量curnum以及当前的页码curpage
         const { curnum, curpage, totalnum } = songData
+        //构造新数据hasMore，20就是每一页请求的数据量perpage
+        //每一页的数据量*（当前的页码值 - 1）+ 当前返回的数量，当它小于totalnum时就表示它仍然有多余的数据
         const hasMore = 20 * (curpage - 1) + curnum < totalnum
 
         res.json({
           code: ERR_OK,
+          //前端能拿到的数据就这三个：歌曲列表、歌手对象、是否有多余的数据
           result: {
             songs: songList,
             singer,

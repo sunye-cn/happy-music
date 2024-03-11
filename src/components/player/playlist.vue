@@ -115,7 +115,9 @@
       const addSongRef = ref(null)
 
       const store = useStore()
+      //Playlist正在播放列表
       const playlist = computed(() => store.state.playlist)
+      // SequenceList顺序播放列表
       const sequenceList = computed(() => store.state.sequenceList)
       const currentSong = computed(() => store.getters.currentSong)
 
@@ -123,6 +125,7 @@
       const { getFavoriteIcon, toggleFavorite } = useFavorite()
 
       watch(currentSong, async (newSong) => {
+        //对多次点击做的保护之一，currentSong是否是不合法的歌曲
         if (!visible.value || !newSong.id) {
           return
         }
@@ -136,14 +139,17 @@
         }
       }
 
+      //有hide就有show，外部用的，点击右下角mini-player的icon就会把show显示出来
       async function show() {
         visible.value = true
 
+        //DOM的变化会有一个nextTick过程，所以要在nextTick后才能拿到他渲染好的DOM
         await nextTick()
         refreshScroll()
         scrollToCurrent()
       }
 
+      //将整个层隐藏
       function hide() {
         visible.value = false
       }
@@ -157,15 +163,18 @@
         store.commit('setPlayingState', true)
       }
 
+      //如果滚动不了就用refresh方法
       function refreshScroll() {
         scrollRef.value.scroll.refresh()
       }
 
       // 滚动返回时回到播放歌曲的位置  
       function scrollToCurrent() {
+        // 获取index
         const index = sequenceList.value.findIndex((song) => {
           return currentSong.value.id === song.id
         })
+        //对多次点击做的保护之一，index不在期望值之内
         if (index === -1) {
           return
         }
@@ -174,24 +183,30 @@
         scrollRef.value.scroll.scrollToElement(target, 300)
       }
 
+      //就是把这首歌从sequenceList和playlist中删除，就是在操作state中的数据
       function removeSong(song) {
         if (removing.value) {
           return
         }
         removing.value = true
+        //封装一个action removeSong，然后在action.js中实现removeSong
         store.dispatch('removeSong', song)
         if (!playlist.value.length) {
           hide()
         }
+        //DOM层面的防御来避免多次点击的手段，前面加上:class="{'disable': removing}"属性
+        //action.js里面也做一层保护
         setTimeout(() => {
           removing.value = false
         }, 300)
       }
 
+      //将visible置为true
       function showConfirm() {
         confirmRef.value.show()
       }
 
+      //清空歌曲的逻辑
       function confirmClear() {
         // 派发一个action在actions.js中定义
         store.dispatch('clearSongList')

@@ -33,7 +33,10 @@
       }
     },
     created() {
+      //在created钩子函数中使用$watchAPI
       this.$watch('query', debounce(300, (newQuery) => {
+        //派发一个事件'update:modelValue'，在vue2中是emit一个input事件，vue3就是下面这个
+        //希望query的时候不带首尾空格，所以newQuery.trim()把空格去掉，把trim后的结果给外面
         this.$emit('update:modelValue', newQuery.trim())
       }))
 
